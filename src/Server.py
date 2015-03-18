@@ -30,7 +30,7 @@ def recieveFunc():
 threading.Thread(target=recieveFunc).start()
 
 while(True):
-    data = raw_input()
+    data = input()
     if not data: break;
 
 print "Closing server..."
