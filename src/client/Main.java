@@ -1,9 +1,10 @@
 package client;
 
-import java.io.DataOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Scanner;
 
 public class Main {
 	
@@ -11,21 +12,25 @@ public class Main {
 	static final String NAME = "78.91.39.141";
 	
 	static Socket socket = null;
-	static Scanner input = null;
-	static DataOutputStream output = null;
+	static BufferedReader socketInput = null;
+	static PrintWriter socketOutput = null;
+	static BufferedReader consoleInput = null;
 
 	public static void main(String[] args) throws IOException {
 		socket = new Socket(NAME, PORT);
-		input = new Scanner(System.in);
-		output = new DataOutputStream(socket.getOutputStream());
+		socketInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		socketOutput = new PrintWriter(socket.getOutputStream());
+		consoleInput = new BufferedReader(new InputStreamReader(System.in));
 		while(true){
-			String line = input.nextLine();
+			String line = consoleInput.readLine();
 			if(line.contentEquals("<exit>"))
 				break;
-			output.flush();
+			socketOutput.println(line);
 		}
-		if(output != null)
-			output.close();
+		if(socketOutput != null)
+			socketOutput.close();
+		if(socketInput != null)
+			socketInput.close();
 		if(socket != null)
 			socket.close();
 	}
