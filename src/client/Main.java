@@ -23,9 +23,9 @@ public class Main {
 		consoleInput = new BufferedReader(new InputStreamReader(System.in));
 		while(true){
 			String line = consoleInput.readLine();
+			socketOutput.println(line);
 			if(line.contentEquals("<exit>"))
 				break;
-			socketOutput.println(line);
 		}
 		if(socketOutput != null)
 			socketOutput.close();
