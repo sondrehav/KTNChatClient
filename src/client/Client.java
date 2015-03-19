@@ -29,8 +29,9 @@ public class Client {
 		}
 		System.out.println("Connection accepted " + socket.getInetAddress() + ":" + socket.getPort());
 		try{
-			socketInput = new ObjectInputStream(socket.getInputStream());
 			socketOutput = new ObjectOutputStream(socket.getOutputStream());
+			socketInput = new ObjectInputStream(socket.getInputStream());
+			System.out.println("Streams created.");
 		} catch (IOException e) {
 			System.err.println("Could not open streams.");
 			return false;
@@ -38,7 +39,6 @@ public class Client {
 		new ServerListener(socketInput).start();
 		try{
 			socketOutput.writeObject(username);
-			System.out.println("KEKEKE");
 		} catch (IOException e) {
 			System.err.println("Error logging in.");
 			disconnect();

@@ -90,9 +90,7 @@ public class Server {
 				String message;
 				try {
 					message = (String) socketInput.readObject();
-				}
-				catch(IOException ioe)
-				{
+				} catch(IOException ioe) {
 					ioe.printStackTrace();
 					running = false;
 				} catch (ClassNotFoundException e) {
