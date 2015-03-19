@@ -1,5 +1,6 @@
 package server;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -86,15 +87,22 @@ public class Server {
 		
 		public void run(){
 			boolean running = true;
+			String message = "";
 			while(running){
-				String message;
+				// http://stackoverflow.com/questions/7022063/java-listening-to-a-socket-with-objectinputstream
+
 				try {
-					message = (String) socketInput.readObject();
-				} catch(IOException ioe) {
+					String line = socketInput.readUTF();
+					if(line.isEmpty()||line==null){
+						System.out.println("heee");
+					} else {						
+						message += socketInput.readUTF();
+					}
+				} catch (EOFException e) {
+					System.out.println(message);
+					message = "";
+				} catch (IOException ioe) {
 					ioe.printStackTrace();
-					running = false;
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
 					running = false;
 				}
 			}
