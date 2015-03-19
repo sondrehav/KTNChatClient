@@ -56,3 +56,9 @@ target/
 # Project files
 .project
 .pydevproject
+
+# Classpath
+.classpath
+
+# Settings
+.settings
