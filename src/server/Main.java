@@ -1,12 +1,10 @@
-package client;
+package server;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 public class Main {
 	
@@ -20,6 +18,7 @@ public class Main {
 		server = new ServerSocket(PORT);
 		socket = server.accept();
 		inputStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+		System.out.println("Waiting...");
 		while(true){			
 			try
 			{
@@ -32,7 +31,10 @@ public class Main {
 				break;
 			}
 		}
-		socket.close();
+		if(socket != null)
+			socket.close();
+		if(inputStream != null)
+			inputStream.close();
 	}
 	
 }
