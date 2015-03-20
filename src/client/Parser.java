@@ -1,5 +1,6 @@
-package shared;
-import org.json.*;
+package client;
+import org.json.JSONObject;
+import static shared.Display.*;
 
 public abstract class Parser {
 	
@@ -32,7 +33,7 @@ public abstract class Parser {
 			object.put("request", "names");
 			object.put("content", "None");
 		default:
-			throw new IllegalArgumentException("Wrong type.");
+			displayErr("Wrong type, message not parsed.");
 		}
 		String string = String.valueOf(object);
 		return string;

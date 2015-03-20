@@ -7,10 +7,10 @@ import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.Scanner;
 
-import shared.Parser;
 import static shared.Display.*;
+import static client.Parser.*;
 
-public class Client {
+public class ClientApplication {
 	
 	static String SERVER = "localhost";
 	static final int PORT = 8001;
@@ -20,7 +20,7 @@ public class Client {
 	ObjectOutputStream socketOutput = null;
 	String username;
 	
-	Client(String username){
+	ClientApplication(String username){
 		this.username = username;
 	}
 
@@ -42,9 +42,9 @@ public class Client {
 		}
 		new ServerListener(socketInput).start();
 		try{
-			socketOutput.writeObject(username);
+			socketOutput.writeObject(client.Parser.send(client.Parser.LOGIN, username));
 			socketOutput.reset();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			displayErr("Error logging in.");
 			disconnect();
 			return false;
@@ -52,12 +52,12 @@ public class Client {
 		return true;
 	}
 	
-	public void sendMsg(String msg) {
+	public void sendMsg(String msg, int type) {
 		try{
-			socketOutput.write((msg + "\n").getBytes(Charset.forName("UTF-8")));
+			socketOutput.write((client.Parser.send(type, msg)+"\n").getBytes(Charset.forName("UTF-8")));
 			socketOutput.reset();
-		} catch (IOException e) {
-			displayErr("Error sending message to " + username);
+		} catch (Exception e) {
+			displayErr("Error sending message to server");
 		}
 	}
 
@@ -76,21 +76,35 @@ public class Client {
 		display("IP ADDR:  ");
 		SERVER = sysin.nextLine();
 		display("USERNAME: ");
-		Client client = new Client(sysin.nextLine());
+		ClientApplication client = new ClientApplication(sysin.nextLine());
 		if(!client.start()){
 			sysin.close();
 			return;
 		}
-		while(true){
+		boolean running = true;
+		while(running){
 			System.out.print("> ");
 			String msg = sysin.nextLine();
 			try {
-				client.sendMsg(Parser.send(Parser.MESSAGE, msg));
+				switch(msg){
+				case "#help":
+					client.sendMsg("\n", HELP);
+					break;
+				case "#log":
+					client.sendMsg("\n", LOG);
+					break;
+				case "#users":
+					client.sendMsg("\n", NAMES);
+					break;
+				case "#logout":
+					client.sendMsg("\n", LOGOUT);
+					running = false;
+					break;
+				default:
+					client.sendMsg(msg+"\n", MESSAGE);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
-			}
-			if(msg.contentEquals("LOGOUT")){
-				break;
 			}
 		}
 		sysin.close();
