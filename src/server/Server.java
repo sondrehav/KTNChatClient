@@ -87,22 +87,17 @@ public class Server {
 		
 		public void run(){
 			boolean running = true;
-			String message = "";
 			while(running){
-				// http://stackoverflow.com/questions/7022063/java-listening-to-a-socket-with-objectinputstream
-
-				try {
-					String line = socketInput.readUTF();
-					if(line.isEmpty()||line==null){
-						System.out.println("heee");
-					} else {						
-						message += socketInput.readUTF();
+				try {					
+					if(socketInput.available()>0){					
+						byte[] bytes = new byte[socketInput.available()];
+						for(int i = 0; i < socketInput.available(); i++){
+							bytes[i] = socketInput.readByte();
+						}
+						System.out.println(new String(bytes));
 					}
-				} catch (EOFException e) {
-					System.out.println(message);
-					message = "";
-				} catch (IOException ioe) {
-					ioe.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
 					running = false;
 				}
 			}

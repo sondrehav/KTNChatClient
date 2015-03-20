@@ -40,6 +40,7 @@ public class Client {
 		new ServerListener(socketInput).start();
 		try{
 			socketOutput.writeObject(username);
+			socketOutput.reset();
 		} catch (IOException e) {
 			System.err.println("Error logging in.");
 			disconnect();
@@ -71,7 +72,8 @@ public class Client {
 	
 	public void sendMsg(String msg) {
 		try{
-			socketOutput.writeObject(msg.getBytes());
+			socketOutput.write(msg.getBytes());
+			socketOutput.reset();
 		} catch (IOException e) {
 			System.err.println("Error sending message to " + username);
 		}
