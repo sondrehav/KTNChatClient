@@ -32,8 +32,7 @@ public abstract class Parser {
 			object.put("request", "names");
 			object.put("content", "None");
 		default:
-			
-			System.err.println("Wrong type.");
+			throw new IllegalArgumentException("Wrong type.");
 		}
 		String string = String.valueOf(object);
 		return string;

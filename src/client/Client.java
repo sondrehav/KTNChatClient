@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.Scanner;
+import static shared.Display.*;
 
 public class Client {
 	
@@ -25,16 +26,16 @@ public class Client {
 		try{
 			socket = new Socket(SERVER, PORT);
 		} catch (Exception e) {
-			System.err.println("Failed to connect to server.");
+			displayErr("Failed to connect to server.");
 			return false;
 		}
-		System.out.println("Connection accepted " + socket.getInetAddress() + ":" + socket.getPort());
+		display("Connection accepted " + socket.getInetAddress() + ":" + socket.getPort());
 		try{
 			socketOutput = new ObjectOutputStream(socket.getOutputStream());
 			socketInput = new ObjectInputStream(socket.getInputStream());
-			System.out.println("Streams created.");
+			display("Streams created.");
 		} catch (IOException e) {
-			System.err.println("Could not open streams.");
+			displayErr("Could not open streams.");
 			return false;
 		}
 		new ServerListener(socketInput).start();
@@ -42,7 +43,7 @@ public class Client {
 			socketOutput.writeObject(username);
 			socketOutput.reset();
 		} catch (IOException e) {
-			System.err.println("Error logging in.");
+			displayErr("Error logging in.");
 			disconnect();
 			return false;
 		}
@@ -54,7 +55,7 @@ public class Client {
 			socketOutput.write((msg + "\n").getBytes(Charset.forName("UTF-8")));
 			socketOutput.reset();
 		} catch (IOException e) {
-			System.err.println("Error sending message to " + username);
+			displayErr("Error sending message to " + username);
 		}
 	}
 
@@ -77,12 +78,11 @@ public class Client {
 		while(true){
 			System.out.print("> ");
 			String msg = sysin.nextLine();
+			client.sendMsg(msg);
 			if(msg.contentEquals("LOGOUT")){
 				break;
 			}
-			client.sendMsg(msg);
 		}
-		client.sendMsg("LOGOUT");
 		client.disconnect();
 	}
 	
@@ -98,10 +98,10 @@ public class Client {
 			while(true){
 				try{
 					String msg = (String) in.readObject();
-					System.out.println(msg);
+					display(msg);
 					System.out.println("> ");
 				} catch (IOException | ClassNotFoundException e) {
-					System.err.println("Server has closed the connection.");
+					displayErr("Server has closed the connection.");
 					break;
 				}
 			}
