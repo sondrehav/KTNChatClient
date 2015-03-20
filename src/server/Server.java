@@ -8,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 public class Server {
@@ -134,7 +135,8 @@ public class Server {
 				return false;
 			}
 			try{
-				socketOutput.writeObject(msg);
+				socketOutput.write((msg + "\n").getBytes(Charset.forName("UTF-8")));
+				socketOutput.reset();
 			} catch (IOException e) {
 				displayErr("Error sending message to " + username);
 			}

@@ -6,11 +6,13 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.Scanner;
+
+import shared.Parser;
 import static shared.Display.*;
 
 public class Client {
 	
-	static final String SERVER = "localhost";
+	static String SERVER = "localhost";
 	static final int PORT = 8001;
 	
 	Socket socket = null;
@@ -70,19 +72,28 @@ public class Client {
 	}
 
 	public static void main(String[] args) throws IOException {
-		Client client = new Client("Sondre");
+		Scanner sysin = new Scanner(System.in);
+		display("IP ADDR:  ");
+		SERVER = sysin.nextLine();
+		display("USERNAME: ");
+		Client client = new Client(sysin.nextLine());
 		if(!client.start()){
+			sysin.close();
 			return;
 		}
-		Scanner sysin = new Scanner(System.in);
 		while(true){
 			System.out.print("> ");
 			String msg = sysin.nextLine();
-			client.sendMsg(msg);
+			try {
+				client.sendMsg(Parser.send(Parser.MESSAGE, msg));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			if(msg.contentEquals("LOGOUT")){
 				break;
 			}
 		}
+		sysin.close();
 		client.disconnect();
 	}
 	
