@@ -1,6 +1,8 @@
 package server;
 
-import java.io.EOFException;
+import static shared.Display.display;
+import static shared.Display.displayErr;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -31,12 +33,12 @@ public class Server {
 		try{
 			ServerSocket serverSocket = new ServerSocket(this.port);
 			while(running){
-				System.out.println("Waiting for connection on " + String.valueOf(this.port) + ".");
+				display("Waiting for connection on " + String.valueOf(this.port) + ".");
 				Socket socket = serverSocket.accept();
 				if(!running) break;
 				Client client = new Client(socket);
 				clients.add(client);
-				System.out.println("Client added.");
+				display("Client added.");
 				client.start();
 			}
 			try{
@@ -71,19 +73,19 @@ public class Server {
 		public Client(Socket socket) {
 			id = ++c_id;
 			this.socket = socket;
-			System.out.println("Thread "+String.valueOf(id)+" is creating input- and outputstreams.");
+			display("Thread "+String.valueOf(id)+" is creating input- and outputstreams.");
 			try {
 				socketInput = new ObjectInputStream(socket.getInputStream());
 				socketOutput = new ObjectOutputStream(socket.getOutputStream());
 				username = (String) socketInput.readObject();
-				System.out.println(username + " connected.");
+				display(username + " connected.");
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			System.out.println("Streams created.");
+			display("Streams created.");
 		}
 		
 		public void run(){
@@ -96,7 +98,7 @@ public class Server {
 							byte b = socketInput.readByte();
 							if(b == 10){
 								// NEW LINE DETECTED; END OF MESSAGE
-								System.out.println(s);
+								display(s, this.username);
 								s = "";
 							} else {
 								s += (char) b;
@@ -104,7 +106,8 @@ public class Server {
 						}
 					}
 					if(s.contentEquals("LOGOUT")){
-						this.close();
+						display("Logging out.", this.username);
+						running = false;
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -116,6 +119,7 @@ public class Server {
 
 		public void close() {
 			try{
+				sendMsg("LOGOUT");
 				if(socketOutput != null) socketOutput.close();
 				if(socketInput != null) socketInput.close();
 				if(socket != null) socket.close();
@@ -132,7 +136,7 @@ public class Server {
 			try{
 				socketOutput.writeObject(msg);
 			} catch (IOException e) {
-				System.out.println("Error sending message to " + username);
+				displayErr("Error sending message to " + username);
 			}
 			return true;
 		}
