@@ -40,10 +40,10 @@ public class Server {
 				client.start();
 			}
 			try{
-				serverSocket.close();
 				for(Client client : clients){
 					client.close();
 				}
+				serverSocket.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -63,8 +63,8 @@ public class Server {
 		private ObjectOutputStream socketOutput = null;
 		private int id;
 		private String username;
-		String message;
-		String date;
+//		String message;
+//		String date;
 		
 		private static int c_id = 0;
 		
@@ -80,6 +80,7 @@ public class Server {
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			System.out.println("Streams created.");
@@ -87,14 +88,23 @@ public class Server {
 		
 		public void run(){
 			boolean running = true;
+			String s = "";
 			while(running){
-				try {					
+				try {
 					if(socketInput.available()>0){					
-						byte[] bytes = new byte[socketInput.available()];
 						for(int i = 0; i < socketInput.available(); i++){
-							bytes[i] = socketInput.readByte();
+							byte b = socketInput.readByte();
+							if(b == 10){
+								// NEW LINE DETECTED; END OF MESSAGE
+								System.out.println(s);
+								s = "";
+							} else {
+								s += (char) b;
+							}
 						}
-						System.out.println(new String(bytes));
+					}
+					if(s.contentEquals("LOGOUT")){
+						this.close();
 					}
 				} catch (IOException e) {
 					e.printStackTrace();

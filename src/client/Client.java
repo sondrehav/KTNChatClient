@@ -49,30 +49,9 @@ public class Client {
 		return true;
 	}
 	
-	public static final int BUFSIZE = 1024;
-	private byte[][] split(byte[] msg){
-		int length = (int) Math.ceil((double) msg.length / (double) BUFSIZE);
-		System.out.println(length);
-		byte[][] b = new byte[length][1024];
-		int sLength = BUFSIZE;
-		if(msg.length < sLength){
-			sLength = msg.length;
-		}
-		for(int i = 0; i < length; i ++){
-			for(int j = 0; j < BUFSIZE; j++){
-				if(j<sLength){					
-					b[i][j] = msg[BUFSIZE * i + j];
-				} else {
-					b[i][j] = 0;
-				}
-			}
-		}
-		return b;
-	}
-	
 	public void sendMsg(String msg) {
 		try{
-			socketOutput.write(msg.getBytes());
+			socketOutput.write((msg + "\n").getBytes(Charset.forName("UTF-8")));
 			socketOutput.reset();
 		} catch (IOException e) {
 			System.err.println("Error sending message to " + username);
