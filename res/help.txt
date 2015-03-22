@@ -1,0 +1,3 @@
+#log - List previous messages
+#users - List users currently logged in
+#logout - Logs out current user

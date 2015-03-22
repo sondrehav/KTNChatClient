@@ -37,12 +37,12 @@ public class Client extends Thread {
 		String s = "";
 		while(running){
 			try {
-				if(socketInput.available()>0){					
+				if(socketInput.available()>0){		
 					for(int i = 0; i < socketInput.available(); i++){
 						byte b = socketInput.readByte();
-						if(b == 10){
+						if(b == 3){
 							// NEW LINE DETECTED; END OF MESSAGE
-							Parser.recieve(s, this);
+							ServerParser.recieve(s, this);
 							s = "";
 						} else {
 							s += (char) b;
@@ -67,18 +67,57 @@ public class Client extends Thread {
 		}
 	}
 	
-	private synchronized boolean sendMsg(String msg) {
-		if(!socket.isConnected()){
-			close();
-			return false;
-		}
+	public boolean sendMsg(String msg, int type) {
 		try{
-			socketOutput.write((msg + "\n").getBytes(Charset.forName("UTF-8")));
+			socketOutput.write((ServerParser.send(type, msg, username)+Character.toChars(3)[0]).getBytes(Charset.forName("UTF-8")));
 			socketOutput.reset();
-		} catch (IOException e) {
-			displayErr("Error sending message to " + username);
+			return true;
+		} catch (Exception e) {
+			displayErr("Error sending message to "+username+".");
 		}
-		return true;
+		return false;
+	}
+
+	public void login(String content) {
+		for(String s : ServerApplication.server.usernames()){
+			if(s==null){
+				continue;
+			}
+			if(content.contentEquals(s)){
+				sendMsg("Username taken.", ServerParser.ERROR);
+				return;
+			}
+		}
+		this.username = content;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void help() {
+		String str = "";
+		for(String s : ServerApplication.helpText){
+			str += s + "\n";
+		}
+		sendMsg(str, ServerParser.INFO);
+	}
+
+	public void log() {
+		System.out.println("HEHEH");
+		String sw = "";
+		for(String s : ServerApplication.server.messages){
+			sw += s+"\n";
+		}
+		sendMsg(sw, ServerParser.HISTORY);
+	}
+
+	public void names() {
+		String msg = "";
+		for(String s : ServerApplication.server.usernames()){
+			msg += s + "\n";
+		}
+		sendMsg(msg, ServerParser.MESSAGE);
 	}
 
 }

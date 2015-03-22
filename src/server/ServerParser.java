@@ -1,12 +1,13 @@
 package server;
 
 import java.time.LocalDateTime;
+
 import static shared.Display.*;
 
 import org.json.*;
 
 
-public abstract class Parser {
+public abstract class ServerParser {
 	
 	public static final int ERROR = 0, INFO = 1, HISTORY = 2, MESSAGE = 3;
 
@@ -17,26 +18,34 @@ public abstract class Parser {
 		String content = json.getString("content");
 		switch(type){
 		case "login":
-			// TODO: Do something
+			client.login(content);
 			break;
 		case "logout":
-			// TODO: Do something
+			client._stop();
+			ServerApplication.server.clients.remove(client);
 			break;
 		case "msg":
-			// TODO: Do something
+			display(content, client.getUsername());
+			ServerApplication.server.messages.add("["+convertTimestamp(LocalDateTime.now().toString())+": "+client.getUsername()+"] "+content);
+			ServerApplication.server.sendAll(content);
 			break;
 		case "help":
-			// TODO: Do something
+			client.help();
 			break;
 		case "log":
-			// TODO: Do something
+			client.log();
 			break;
 		case "names":
-			// TODO: Do something
+			client.names();
 			break;
 		default:
 			// TODO: ERROR
 		}
+	}
+	
+	private static String convertTimestamp(String timestamp) {
+		String s = timestamp.split("T")[1];
+		return s.split(":")[0] +":"+ s.split(":")[1] +":"+ s.split(":");
 	}
 	
 	public static String send(int type, String content, String username) throws Exception {

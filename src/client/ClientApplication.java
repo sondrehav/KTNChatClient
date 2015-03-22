@@ -4,13 +4,20 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+//import java.net.URL;
 import java.nio.charset.Charset;
+//import java.util.ResourceBundle;
 import java.util.Scanner;
 
+//import javafx.application.Application;
+//import javafx.fxml.FXMLLoader;
+//import javafx.fxml.Initializable;
+//import javafx.scene.Scene;
+//import javafx.scene.layout.Pane;
+//import javafx.stage.Stage;
 import static shared.Display.*;
-import static client.Parser.*;
 
-public class ClientApplication {
+public class ClientApplication/* extends Application implements Initializable*/ {
 	
 	static String SERVER = "localhost";
 	static final int PORT = 8001;
@@ -23,7 +30,8 @@ public class ClientApplication {
 	ClientApplication(String username){
 		this.username = username;
 	}
-
+	
+	ServerListener serverListener = null;
 	public boolean start(){
 		try{
 			socket = new Socket(SERVER, PORT);
@@ -40,25 +48,28 @@ public class ClientApplication {
 			displayErr("Could not open streams.");
 			return false;
 		}
-		new ServerListener(socketInput).start();
-		try{
-			socketOutput.writeObject(client.Parser.send(client.Parser.LOGIN, username));
-			socketOutput.reset();
-		} catch (Exception e) {
-			displayErr("Error logging in.");
+		serverListener = new ServerListener(socketInput);
+		serverListener.start();
+		if(!sendMsg(username, ClientParser.LOGIN)){
 			disconnect();
 			return false;
 		}
 		return true;
 	}
 	
-	public void sendMsg(String msg, int type) {
+	public boolean sendMsg(String msg, int type) {
+		if(username==null&&type!=ClientParser.LOGIN){
+			displayErr("Not logged in.");
+			return false;
+		}
 		try{
-			socketOutput.write((client.Parser.send(type, msg)+"\n").getBytes(Charset.forName("UTF-8")));
+			socketOutput.write((ClientParser.send(type, msg)+Character.toChars(3)[0]).getBytes(Charset.forName("UTF-8")));
 			socketOutput.reset();
 		} catch (Exception e) {
 			displayErr("Error sending message to server");
+			return false;
 		}
+		return true;
 	}
 
 	
@@ -71,15 +82,20 @@ public class ClientApplication {
 			} catch (IOException e) {}
 	}
 
+	static Scanner sysin = new Scanner(System.in);
 	public static void main(String[] args) throws IOException {
-		Scanner sysin = new Scanner(System.in);
+		//launch(args);
 		display("IP ADDR:  ");
 		SERVER = sysin.nextLine();
 		display("USERNAME: ");
-		ClientApplication client = new ClientApplication(sysin.nextLine());
+		String username;
+		while(!(username = sysin.nextLine()).matches("[A-Za-z0-9]*")){
+			displayErr("\'"+username + "\' is not a valid username.");
+		}
+		ClientApplication client = new ClientApplication(username);
 		if(!client.start()){
 			sysin.close();
-			return;
+			System.exit(1);
 		}
 		boolean running = true;
 		while(running){
@@ -88,27 +104,29 @@ public class ClientApplication {
 			try {
 				switch(msg){
 				case "#help":
-					client.sendMsg("\n", HELP);
+					client.sendMsg("", ClientParser.HELP);
 					break;
 				case "#log":
-					client.sendMsg("\n", LOG);
+					client.sendMsg("", ClientParser.LOG);
 					break;
 				case "#users":
-					client.sendMsg("\n", NAMES);
+					client.sendMsg("", ClientParser.NAMES);
 					break;
 				case "#logout":
-					client.sendMsg("\n", LOGOUT);
+					client.sendMsg("", ClientParser.LOGOUT);
 					running = false;
 					break;
 				default:
-					client.sendMsg(msg+"\n", MESSAGE);
+					client.sendMsg(msg, ClientParser.MESSAGE);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+		display("Logging out...");
 		sysin.close();
 		client.disconnect();
+		System.exit(0);
 	}
 	
 	public static class ServerListener extends Thread {
@@ -120,19 +138,42 @@ public class ClientApplication {
 		}
 		
 		public void run() {
+			String s = "";
 			while(true){
-				try{
-					String msg = (String) in.readObject();
-					display(msg);
-					System.out.println("> ");
-				} catch (IOException | ClassNotFoundException e) {
-					displayErr("Server has closed the connection.");
+				try {
+					if(in.available()>0){		
+						for(int i = 0; i < in.available(); i++){
+							byte b = in.readByte();
+							if(b == 3){
+								// NEW LINE DETECTED; END OF MESSAGE
+								ClientParser.recieve(s);
+								s = "";
+							} else {
+								s += (char) b;
+							}
+						}
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
 					break;
 				}
 			}
 		}
 
 	}
+/*
+	@Override
+	public void start(Stage arg0) throws Exception {
+		Pane p = (Pane) FXMLLoader.load(getClass().getResource("gui.fxml"));
+		arg0.setScene(new Scene(p));
+		arg0.show();
+	}
 
+	@Override
+	public void initialize(URL arg0, ResourceBundle arg1) {
+		// TODO Auto-generated method stub
+		
+	}
+*/
 
 }
