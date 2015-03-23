@@ -12,6 +12,7 @@ import java.util.ArrayList;
 
 public class ServerApplication {
 	
+	public static boolean debug = true;
 	static int PORT = 8001;
 	static ServerApplication server = null;
 	
@@ -32,9 +33,9 @@ public class ServerApplication {
 		setHelpText();
 	}
 	
-	public void sendAll(String message){
+	public void sendAll(String message, String sender, int type){
 		for(Client c : clients){
-			if(!c.sendMsg(message, ServerParser.MESSAGE)){
+			if(!c.sendMsg(message, sender, type)){
 				clients.remove(c);
 			}
 		}
@@ -49,7 +50,6 @@ public class ServerApplication {
 				if(!running) break;
 				Client client = new Client(socket);
 				clients.add(client);
-				display("Client added.");
 				client.start();
 			}
 			try{

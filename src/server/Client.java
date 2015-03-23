@@ -42,6 +42,9 @@ public class Client extends Thread {
 						byte b = socketInput.readByte();
 						if(b == 3){
 							// NEW LINE DETECTED; END OF MESSAGE
+							System.out.println("\nRECIEVING:\n");
+							System.out.println(s);
+							System.out.println("\n");
 							ServerParser.recieve(s, this);
 							s = "";
 						} else {
@@ -67,9 +70,15 @@ public class Client extends Thread {
 		}
 	}
 	
-	public boolean sendMsg(String msg, int type) {
+	public boolean sendMsg(String msg, String sender, int type) {
 		try{
-			socketOutput.write((ServerParser.send(type, msg, username)+Character.toChars(3)[0]).getBytes(Charset.forName("UTF-8")));
+			String message = ServerParser.send(type, msg, sender)+Character.toChars(3)[0];
+			if(ServerApplication.debug){
+				System.out.println("\nSENDING:\n");
+				System.out.println(message);
+				System.out.println("\n");
+			}
+			socketOutput.write(message.getBytes(Charset.forName("UTF-8")));
 			socketOutput.reset();
 			return true;
 		} catch (Exception e) {
@@ -84,11 +93,12 @@ public class Client extends Thread {
 				continue;
 			}
 			if(content.contentEquals(s)){
-				sendMsg("Username taken.", ServerParser.ERROR);
+				sendMsg("Username taken.", null, ServerParser.ERROR);
 				return;
 			}
 		}
 		this.username = content;
+		display("User \'"+content+"\' signed in.");
 	}
 
 	public String getUsername() {
@@ -100,16 +110,15 @@ public class Client extends Thread {
 		for(String s : ServerApplication.helpText){
 			str += s + "\n";
 		}
-		sendMsg(str, ServerParser.INFO);
+		sendMsg(str, null, ServerParser.INFO);
 	}
 
 	public void log() {
-		System.out.println("HEHEH");
 		String sw = "";
 		for(String s : ServerApplication.server.messages){
 			sw += s+"\n";
 		}
-		sendMsg(sw, ServerParser.HISTORY);
+		sendMsg(sw, null, ServerParser.HISTORY);
 	}
 
 	public void names() {
@@ -117,7 +126,7 @@ public class Client extends Thread {
 		for(String s : ServerApplication.server.usernames()){
 			msg += s + "\n";
 		}
-		sendMsg(msg, ServerParser.MESSAGE);
+		sendMsg(msg, null, ServerParser.INFO);
 	}
 
 }

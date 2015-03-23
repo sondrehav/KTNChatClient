@@ -21,23 +21,39 @@ public abstract class ServerParser {
 			client.login(content);
 			break;
 		case "logout":
-			client._stop();
-			ServerApplication.server.clients.remove(client);
+			if(client.getUsername()==null){
+				client.sendMsg("Illegal request.", null, ERROR);
+			} else {				
+				client._stop();
+				ServerApplication.server.clients.remove(client);
+			}
 			break;
 		case "msg":
+			if(client.getUsername()==null){
+				client.sendMsg("Illegal request.", null, ERROR);
+			} else {								
+				ServerApplication.server.messages.add("["+convertTimestamp(LocalDateTime.now().toString())+": "+client.getUsername()+"] "+content);
+				ServerApplication.server.sendAll(content, client.getUsername(), MESSAGE);
+			}
 			display(content, client.getUsername());
-			ServerApplication.server.messages.add("["+convertTimestamp(LocalDateTime.now().toString())+": "+client.getUsername()+"] "+content);
-			ServerApplication.server.sendAll(content);
 			break;
 		case "help":
 			client.help();
 			break;
 		case "log":
-			client.log();
+			if(client.getUsername()==null){
+				client.sendMsg("Illegal request.", null, ERROR);
+			} else {				
+				client.log();
+			}
 			break;
 		case "names":
-			client.names();
-			break;
+			if(client.getUsername()==null){
+				client.sendMsg("Illegal request.", null, ERROR);
+			} else {				
+				client.names();
+				break;
+			}
 		default:
 			// TODO: ERROR
 		}
@@ -45,10 +61,13 @@ public abstract class ServerParser {
 	
 	private static String convertTimestamp(String timestamp) {
 		String s = timestamp.split("T")[1];
-		return s.split(":")[0] +":"+ s.split(":")[1] +":"+ s.split(":");
+		return s.split(":")[0] +":"+ s.split(":")[1] +":"+ s.split(":")[2];
 	}
 	
 	public static String send(int type, String content, String username) throws Exception {
+		if(username==null&&type==MESSAGE){
+			throw new Exception("Sender cant be null when sending a message.");
+		}
 		JSONObject object = new JSONObject();
 		object.put("timestamp", String.valueOf(LocalDateTime.now()));
 		switch(type){

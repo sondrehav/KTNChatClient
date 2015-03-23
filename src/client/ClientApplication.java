@@ -12,6 +12,8 @@ import java.util.Scanner;
 
 public class ClientApplication {
 	
+	public static boolean debug = true; 
+	
 	static String SERVER = "localhost";
 	static final int PORT = 8001;
 	
@@ -37,7 +39,6 @@ public class ClientApplication {
 		try{
 			socketOutput = new ObjectOutputStream(socket.getOutputStream());
 			socketInput = new ObjectInputStream(socket.getInputStream());
-			display("Streams created.");
 		} catch (IOException e) {
 			displayErr("Could not open streams.");
 			return false;
@@ -57,7 +58,13 @@ public class ClientApplication {
 			return false;
 		}
 		try{
-			socketOutput.write((ClientParser.send(type, msg)+Character.toChars(3)[0]).getBytes(Charset.forName("UTF-8")));
+			String message = ClientParser.send(type, msg)+Character.toChars(3)[0];
+			if(debug){
+				System.out.println("\nSENDING:\n");
+				System.out.println(message);
+				System.out.println("\n");
+			}
+			socketOutput.write(message.getBytes(Charset.forName("UTF-8")));
 			socketOutput.reset();
 		} catch (Exception e) {
 			displayErr("Error sending message to server");
@@ -94,7 +101,6 @@ public class ClientApplication {
 		}
 		boolean running = true;
 		while(running){
-			System.out.print("> ");
 			String msg = sysin.nextLine();
 			try {
 				switch(msg){
@@ -141,6 +147,11 @@ public class ClientApplication {
 							byte b = in.readByte();
 							if(b == 3){
 								// NEW LINE DETECTED; END OF MESSAGE
+								if(debug){
+									System.out.println("\nRECIEVING:\n");
+									System.out.println(s);
+									System.out.println("\n");
+								}
 								ClientParser.recieve(s);
 								s = "";
 							} else {
