@@ -1,23 +1,16 @@
 package client;
 
+import static shared.Display.display;
+import static shared.Display.displayErr;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-//import java.net.URL;
 import java.nio.charset.Charset;
-//import java.util.ResourceBundle;
 import java.util.Scanner;
 
-//import javafx.application.Application;
-//import javafx.fxml.FXMLLoader;
-//import javafx.fxml.Initializable;
-//import javafx.scene.Scene;
-//import javafx.scene.layout.Pane;
-//import javafx.stage.Stage;
-import static shared.Display.*;
-
-public class ClientApplication/* extends Application implements Initializable*/ {
+public class ClientApplication {
 	
 	static String SERVER = "localhost";
 	static final int PORT = 8001;
@@ -27,10 +20,11 @@ public class ClientApplication/* extends Application implements Initializable*/ 
 	ObjectOutputStream socketOutput = null;
 	String username;
 	
-	ClientApplication(String username){
-		this.username = username;
-	}
-	
+//	ClientApplication(String username){
+//		super();
+//		this.username = username;
+//	}
+//	
 	ServerListener serverListener = null;
 	public boolean start(){
 		try{
@@ -83,8 +77,8 @@ public class ClientApplication/* extends Application implements Initializable*/ 
 	}
 
 	static Scanner sysin = new Scanner(System.in);
+	static ClientApplication client;
 	public static void main(String[] args) throws IOException {
-		//launch(args);
 		display("IP ADDR:  ");
 		SERVER = sysin.nextLine();
 		display("USERNAME: ");
@@ -92,7 +86,8 @@ public class ClientApplication/* extends Application implements Initializable*/ 
 		while(!(username = sysin.nextLine()).matches("[A-Za-z0-9]*")){
 			displayErr("\'"+username + "\' is not a valid username.");
 		}
-		ClientApplication client = new ClientApplication(username);
+		client = new ClientApplication();
+		client.username = username;
 		if(!client.start()){
 			sysin.close();
 			System.exit(1);
@@ -161,19 +156,5 @@ public class ClientApplication/* extends Application implements Initializable*/ 
 		}
 
 	}
-/*
-	@Override
-	public void start(Stage arg0) throws Exception {
-		Pane p = (Pane) FXMLLoader.load(getClass().getResource("gui.fxml"));
-		arg0.setScene(new Scene(p));
-		arg0.show();
-	}
-
-	@Override
-	public void initialize(URL arg0, ResourceBundle arg1) {
-		// TODO Auto-generated method stub
-		
-	}
-*/
 
 }
