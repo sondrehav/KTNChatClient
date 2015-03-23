@@ -15,15 +15,25 @@ public abstract class ServerParser {
 
 		JSONObject json = new JSONObject(message);
 		String type = json.getString("request");
-		String content = json.getString("content");
+		String content = "None";
+		try{			
+			content = json.getString("content");
+		} catch (JSONException e) {
+			
+		}
 		switch(type){
 		case "login":
-			client.login(content);
+			if(!content.matches("[A-Za-z0-9]*")){
+				client.sendMsg("Invalid username. Only characters allowed: A-Z, a-z and 0-9.", null, ERROR);
+			} else {				
+				client.login(content);
+				client.log();
+			}
 			break;
 		case "logout":
 			if(client.getUsername()==null){
 				client.sendMsg("Illegal request.", null, ERROR);
-			} else {				
+			} else {
 				client._stop();
 				ServerApplication.server.clients.remove(client);
 			}

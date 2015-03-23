@@ -4,8 +4,8 @@ import static shared.Display.display;
 import static shared.Display.displayErr;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.Scanner;
@@ -18,8 +18,8 @@ public class ClientApplication {
 	static final int PORT = 8001;
 	
 	Socket socket = null;
-	ObjectInputStream socketInput = null;
-	ObjectOutputStream socketOutput = null;
+	InputStream socketInput = null;
+	OutputStream socketOutput = null;
 	String username;
 	
 //	ClientApplication(String username){
@@ -37,8 +37,8 @@ public class ClientApplication {
 		}
 		display("Connection accepted " + socket.getInetAddress() + ":" + socket.getPort());
 		try{
-			socketOutput = new ObjectOutputStream(socket.getOutputStream());
-			socketInput = new ObjectInputStream(socket.getInputStream());
+			socketOutput = socket.getOutputStream();
+			socketInput = socket.getInputStream();
 		} catch (IOException e) {
 			displayErr("Could not open streams.");
 			return false;
@@ -58,15 +58,16 @@ public class ClientApplication {
 			return false;
 		}
 		try{
-			String message = ClientParser.send(type, msg)+Character.toChars(3)[0];
+			String message = ClientParser.send(type, msg);
 			if(debug){
 				System.out.println("\nSENDING:\n");
 				System.out.println(message);
 				System.out.println("\n");
 			}
 			socketOutput.write(message.getBytes(Charset.forName("UTF-8")));
-			socketOutput.reset();
+			socketOutput.flush();
 		} catch (Exception e) {
+			e.printStackTrace();
 			displayErr("Error sending message to server");
 			return false;
 		}
@@ -90,9 +91,10 @@ public class ClientApplication {
 		SERVER = sysin.nextLine();
 		display("USERNAME: ");
 		String username;
-		while(!(username = sysin.nextLine()).matches("[A-Za-z0-9]*")){
-			displayErr("\'"+username + "\' is not a valid username.");
-		}
+//		while(!().matches("[A-Za-z0-9]*")){
+//			displayErr("\'"+username + "\' is not a valid username.");
+//		}
+		username = sysin.nextLine();
 		client = new ClientApplication();
 		client.username = username;
 		if(!client.start()){
@@ -118,7 +120,13 @@ public class ClientApplication {
 					running = false;
 					break;
 				default:
-					client.sendMsg(msg, ClientParser.MESSAGE);
+					if(msg.matches("^#login .*")){
+						String u = msg.split("^#login ")[1];
+						client.username = u;
+						client.sendMsg(u, ClientParser.LOGIN);
+					} else {						
+						client.sendMsg(msg, ClientParser.MESSAGE);
+					}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -132,20 +140,27 @@ public class ClientApplication {
 	
 	public static class ServerListener extends Thread {
 
-		ObjectInputStream in = null;
+		InputStream in = null;
 		
-		ServerListener(ObjectInputStream in){
+		ServerListener(InputStream in){
 			this.in = in;
 		}
 		
 		public void run() {
 			String s = "";
+			int braces = 0;
 			while(true){
 				try {
 					if(in.available()>0){		
 						for(int i = 0; i < in.available(); i++){
-							byte b = in.readByte();
-							if(b == 3){
+							byte b = (byte)in.read();
+							if(b == 123){
+								braces++;
+							} else if (b == 125){
+								braces--;
+							}
+							s += (char) b;
+							if(braces == 0){
 								// NEW LINE DETECTED; END OF MESSAGE
 								if(debug){
 									System.out.println("\nRECIEVING:\n");
@@ -154,8 +169,6 @@ public class ClientApplication {
 								}
 								ClientParser.recieve(s);
 								s = "";
-							} else {
-								s += (char) b;
 							}
 						}
 					}

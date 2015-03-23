@@ -4,26 +4,30 @@ import static shared.Display.display;
 import static shared.Display.displayErr;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
 
 public class Client extends Thread {
 	
 	private Socket socket = null;
-	private ObjectInputStream socketInput = null;
-	private ObjectOutputStream socketOutput = null;
+	private InputStream socketInput = null;
+	private OutputStream socketOutput = null;
 	private String username = null;
 	boolean running = false;
 		
 	public Client(Socket socket) {
 		display("Connection from " + String.valueOf(socket.getInetAddress()) + ".");
 		this.socket = socket;
+		System.out.println(socket);
 		try {
-			socketInput = new ObjectInputStream(socket.getInputStream());
-			socketOutput = new ObjectOutputStream(socket.getOutputStream());
+			socketInput = socket.getInputStream();
+			socketOutput = socket.getOutputStream();
 		} catch (IOException e) {
+			e.printStackTrace();
 			displayErr(String.valueOf(socket.getInetAddress()) + " could not connect.");
 		}
 		running = true;
@@ -35,20 +39,27 @@ public class Client extends Thread {
 	
 	public void run(){
 		String s = "";
+		int braces = 0;
 		while(running){
 			try {
 				if(socketInput.available()>0){		
 					for(int i = 0; i < socketInput.available(); i++){
-						byte b = socketInput.readByte();
-						if(b == 3){
+						byte b = (byte)socketInput.read();
+						if(b == 123){
+							braces++;
+						} else if (b == 125){
+							braces--;
+						}
+						s += (char) b;
+						if(braces == 0){
 							// NEW LINE DETECTED; END OF MESSAGE
-							System.out.println("\nRECIEVING:\n");
-							System.out.println(s);
-							System.out.println("\n");
+							if(ServerApplication.debug){								
+								System.out.println("\nRECIEVING:\n");
+								System.out.println(s);
+								System.out.println("\n");
+							}
 							ServerParser.recieve(s, this);
 							s = "";
-						} else {
-							s += (char) b;
 						}
 					}
 				}
@@ -72,14 +83,14 @@ public class Client extends Thread {
 	
 	public boolean sendMsg(String msg, String sender, int type) {
 		try{
-			String message = ServerParser.send(type, msg, sender)+Character.toChars(3)[0];
+			String message = ServerParser.send(type, msg, sender);
 			if(ServerApplication.debug){
 				System.out.println("\nSENDING:\n");
 				System.out.println(message);
 				System.out.println("\n");
 			}
 			socketOutput.write(message.getBytes(Charset.forName("UTF-8")));
-			socketOutput.reset();
+			socketOutput.flush();
 			return true;
 		} catch (Exception e) {
 			displayErr("Error sending message to "+username+".");

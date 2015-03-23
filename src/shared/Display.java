@@ -34,9 +34,9 @@ public abstract class Display {
 		System.out.println("["+time+": "+username+"] "+message);
 	}
 	
-	public static void display(String message, String username, LocalDateTime time){
-		System.out.println("["+time+": "+username+"] "+message);
-	}
+//	public static void display(String message, String username, LocalDateTime time){
+//		System.out.println("["+time+": "+username+"] "+message);
+//	}
 	
 	public static void displayErr(String message){
 		System.err.println("["+time()+"] "+message);
